@@ -1,8 +1,39 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-primary-500: #877eff;
+  --color-primary-600: #5d5fef;
+  --color-secondary-500: #ffb620;
+  --color-off-white: #d0dfff;
+  --color-red: #ff5a5a;
+  --color-dark-1: #000000;
+  --color-dark-2: #09090a;
+  --color-dark-3: #101012;
+  --color-dark-4: #1f1f22;
+  --color-light-1: #ffffff;
+  --color-light-2: #efefef;
+  --color-light-3: #7878a3;
+  --color-light-4: #5c5c7b;
+
+  --font-inter: "Inter", sans-serif;
+
+  --breakpoint-xs: 480px;
+
+  --spacing-420: 420px;
+  --spacing-465: 465px;
+}
+
+@utility container {
+  margin-inline: auto;
+  padding-inline: 2rem;
+  /* override the built-in per-breakpoint max-widths */
+  max-width: 1400px !important;
+}
 
 @layer base {
   * {
@@ -14,100 +45,102 @@
   }
 }
 
-@layer utilities {
-  /* TYPOGRAPHY */
-  .h1-bold {
-    @apply text-[36px] font-bold leading-[140%] tracking-tighter;
-  }
+/* TYPOGRAPHY */
+@utility h1-bold {
+  @apply text-[36px] font-bold leading-[140%] tracking-tighter;
+}
 
-  .h1-semibold {
-    @apply text-[36px] font-semibold leading-[140%] tracking-tighter;
-  }
+@utility h1-semibold {
+  @apply text-[36px] font-semibold leading-[140%] tracking-tighter;
+}
 
-  .h2-bold {
-    @apply text-[30px] font-bold leading-[140%] tracking-tighter;
-  }
+@utility h2-bold {
+  @apply text-[30px] font-bold leading-[140%] tracking-tighter;
+}
 
-  .h3-bold {
-    @apply text-[24px] font-bold leading-[140%] tracking-tighter;
-  }
+@utility h3-bold {
+  @apply text-[24px] font-bold leading-[140%] tracking-tighter;
+}
 
-  .base-semibold {
-    @apply text-[16px] font-semibold leading-[140%] tracking-tighter;
-  }
+@utility base-semibold {
+  @apply text-[16px] font-semibold leading-[140%] tracking-tighter;
+}
 
-  .base-medium {
-    @apply text-[16px] font-medium leading-[140%];
-  }
+@utility base-medium {
+  @apply text-[16px] font-medium leading-[140%];
+}
 
-  .base-regular {
-    @apply text-[16px] font-normal leading-[140%];
-  }
+@utility base-regular {
+  @apply text-[16px] font-normal leading-[140%];
+}
 
-  .body-bold {
-    @apply text-[18px] font-bold leading-[140%];
-  }
+@utility body-bold {
+  @apply text-[18px] font-bold leading-[140%];
+}
 
-  .body-medium {
-    @apply text-[18px] font-medium leading-[140%];
-  }
+@utility body-medium {
+  @apply text-[18px] font-medium leading-[140%];
+}
 
-  .small-semibold {
-    @apply text-[14px] font-semibold leading-[140%] tracking-tighter;
-  }
+@utility small-semibold {
+  @apply text-[14px] font-semibold leading-[140%] tracking-tighter;
+}
 
-  .small-medium {
-    @apply text-[14px] font-medium leading-[140%];
-  }
+@utility small-medium {
+  @apply text-[14px] font-medium leading-[140%];
+}
 
-  .small-regular {
-    @apply text-[14px] font-normal leading-[140%];
-  }
+@utility small-regular {
+  @apply text-[14px] font-normal leading-[140%];
+}
 
-  .subtle-semibold {
-    @apply text-[12px] font-semibold leading-[140%];
-  }
+@utility subtle-semibold {
+  @apply text-[12px] font-semibold leading-[140%];
+}
 
-  .tiny-medium {
-    @apply text-[10px] font-medium leading-[140%];
-  }
+@utility tiny-medium {
+  @apply text-[10px] font-medium leading-[140%];
+}
 
-  /* UTILITIES */
-  .invert-white {
-    @apply invert brightness-0 transition;
-  }
+/* UTILITIES */
+@utility invert-white {
+  @apply invert brightness-0 transition;
+}
 
-  .flex-center {
-    @apply flex justify-center items-center;
-  }
+@utility flex-center {
+  @apply flex justify-center items-center;
+}
 
-  .flex-between {
-    @apply flex justify-between items-center;
-  }
+@utility flex-between {
+  @apply flex justify-between items-center;
+}
 
-  .flex-start {
-    @apply flex justify-start items-center;
-  }
+@utility flex-start {
+  @apply flex justify-start items-center;
+}
 
-  .custom-scrollbar::-webkit-scrollbar {
+@utility custom-scrollbar {
+  &::-webkit-scrollbar {
     width: 3px;
     height: 3px;
     border-radius: 2px;
   }
 
-  .custom-scrollbar::-webkit-scrollbar-track {
+  &::-webkit-scrollbar-track {
     background: #09090a;
   }
 
-  .custom-scrollbar::-webkit-scrollbar-thumb {
+  &::-webkit-scrollbar-thumb {
     background: #5c5c7b;
     border-radius: 50px;
   }
 
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  &::-webkit-scrollbar-thumb:hover {
     background: #7878a3;
   }
+}
 
+@layer components {
   .common-container {
     @apply flex flex-col flex-1 items-center gap-10 overflow-scroll py-10 px-5 md:px-8 lg:p-14 custom-scrollbar;
   }
@@ -131,7 +164,7 @@
   }
 
   .explore-search {
-    @apply h-12 bg-dark-4 border-none placeholder:text-light-4 focus-visible:ring-0 focus-visible:ring-offset-0 ring-offset-0 !important;
+    @apply h-12! bg-dark-4! border-none! placeholder:text-light-4! focus-visible:ring-0! focus-visible:ring-offset-0! ring-offset-0!;
   }
 
   /* Home */
@@ -140,11 +173,11 @@
   }
 
   .home-posts {
-    @apply max-w-screen-sm flex flex-col items-center w-full gap-6 md:gap-9;
+    @apply max-w-(--breakpoint-sm) flex flex-col items-center w-full gap-6 md:gap-9;
   }
 
   .home-creators {
-    @apply hidden xl:flex flex-col w-72 2xl:w-465 px-6 py-10 gap-10  overflow-scroll custom-scrollbar;
+    @apply hidden xl:flex flex-col w-72 2xl:w-465 px-6 py-10 gap-10 overflow-scroll custom-scrollbar;
   }
 
   /* Post Details */
@@ -165,7 +198,7 @@
   }
 
   .post_details-delete_btn {
-    @apply p-0 flex gap-3 hover:bg-transparent hover:text-light-1  text-light-1 small-medium lg:base-medium;
+    @apply p-0 flex gap-3 hover:bg-transparent hover:text-light-1 text-light-1 small-medium lg:base-medium;
   }
 
   /* Profile */
@@ -178,7 +211,7 @@
   }
 
   .profile-tab {
-    @apply flex-center gap-3 py-4 w-48 bg-dark-2  transition flex-1 xl:flex-initial;
+    @apply flex-center gap-3 py-4 w-48 bg-dark-2 transition flex-1 xl:flex-initial;
   }
 
   /* Saved */
@@ -214,7 +247,7 @@
   }
 
   .grid-post_user {
-    @apply absolute bottom-0 p-5 flex-between w-full bg-gradient-to-t from-dark-3 to-transparent rounded-b-[24px] gap-2;
+    @apply absolute bottom-0 p-5 flex-between w-full bg-linear-to-t from-dark-3 to-transparent rounded-b-[24px] gap-2;
   }
 
   /* Left sidebar */
@@ -228,7 +261,7 @@
 
   /* Post Card */
   .post-card {
-    @apply bg-dark-2 rounded-3xl border border-dark-4 p-5 lg:p-7 w-full max-w-screen-sm;
+    @apply bg-dark-2 rounded-3xl border border-dark-4 p-5 lg:p-7 w-full max-w-(--breakpoint-sm);
   }
 
   .post-card_img {
@@ -244,37 +277,35 @@
   .user-card {
     @apply flex-center flex-col gap-4 border border-dark-4 rounded-[20px] px-5 py-8;
   }
-}
 
-@layer components {
   /* SHADCN COMPONENTS */
   /* Form */
   .shad-form_label {
-    @apply text-white !important;
+    @apply text-white!;
   }
 
   .shad-form_message {
-    @apply text-red !important;
+    @apply text-red!;
   }
 
   .shad-input {
-    @apply h-12 bg-dark-4 border-none placeholder:text-light-4 focus-visible:ring-1 focus-visible:ring-offset-1 ring-offset-light-3 !important;
+    @apply h-12! bg-dark-4! border-none! placeholder:text-light-4! focus-visible:ring-1! focus-visible:ring-offset-1! ring-offset-light-3!;
   }
 
   .shad-textarea {
-    @apply h-36 bg-dark-3 rounded-xl border-none focus-visible:ring-1 focus-visible:ring-offset-1 ring-offset-light-3 !important;
+    @apply h-36! bg-dark-3! rounded-xl! border-none! focus-visible:ring-1! focus-visible:ring-offset-1! ring-offset-light-3!;
   }
 
   /* Button */
   .shad-button_primary {
-    @apply bg-primary-500 hover:bg-primary-500 text-light-1 flex gap-2 !important;
+    @apply bg-primary-500! hover:bg-primary-500! text-light-1! flex! gap-2!;
   }
 
   .shad-button_dark_4 {
-    @apply h-12 bg-dark-4 px-5 text-light-1 flex gap-2 !important;
+    @apply h-12! bg-dark-4! px-5! text-light-1! flex! gap-2!;
   }
 
   .shad-button_ghost {
-    @apply flex gap-4 items-center justify-start hover:bg-transparent hover:text-white !important;
+    @apply flex! gap-4! items-center! justify-start! hover:bg-transparent! hover:text-white!;
   }
 }
