@@ -21,10 +21,10 @@ import { z } from "zod";
 import Loader from "@/components/shared/loader";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import { createUserAccount } from "@/lib/appwrite/api";
+import { toast } from "@/components/ui/toast";
 
-type Props = {};
-
-const SignupForm = (props: Props) => {
+const SignupForm = () => {
   const [isLoading, setLoading] = useState(false);
   const form = useForm<z.infer<typeof SignupValidation>>({
     resolver: zodResolver(SignupValidation),
@@ -36,14 +36,23 @@ const SignupForm = (props: Props) => {
     },
   });
 
-  async function onSubmit() {
-    // const newUser = await createUserAccount(values);
+  async function onSubmit(values: z.infer<typeof SignupValidation>) {
     try {
       setLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      console.log("submit completed");
+      const newUser = await createUserAccount(values);
+      // const session = await signInAccount();
+      toast.add({
+        type: "success",
+        title: "Account created successfully",
+        description: "Auto redirecting to login, please wait...",
+      });
+      return newUser;
     } catch (e) {
-      console.error(e);
+      return toast.add({
+        type: "error",
+        title: "Sign up failed, please try again later.",
+        description: e instanceof Error ? e.message : String(e),
+      });
     } finally {
       setLoading(false);
     }

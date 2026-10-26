@@ -6,10 +6,9 @@ import { Home } from "./_root/pages";
 import "./global.css";
 import AuthLayout from "./_auth/AuthLayout";
 import RootLayout from "./_root/RootLayout";
+import { Toaster } from "./components/ui/toast";
 
-type Props = {};
-
-const App = (props: Props) => {
+const App = () => {
   return (
     <main className="flex h-screen">
       <Routes>
@@ -23,6 +22,7 @@ const App = (props: Props) => {
           <Route index element={<Home />} />
         </Route>
       </Routes>
+      <Toaster />
     </main>
   );
 };
