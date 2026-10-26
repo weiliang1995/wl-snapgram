@@ -11,7 +11,7 @@ type Props = {};
 
 const App = (props: Props) => {
   return (
-    <main>
+    <main className="flex h-screen">
       <Routes>
         {/* Public */}
         <Route element={<AuthLayout />}>
