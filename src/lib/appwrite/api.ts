@@ -68,3 +68,7 @@ export async function getCurrentUser() {
 
   return currentUser.rows[0] ?? null;
 }
+
+export async function signOutAccount() {
+  return account.deleteSession({ sessionId: "current" });
+}

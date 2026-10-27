@@ -19,7 +19,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import Loader from "@/components/shared/loader";
+import Loader from "@/components/shared/Loader";
 import { toast } from "@/components/ui/toast";
 import { useUserContext } from "@/context/AuthContext";
 import { useSignInAccount } from "@/lib/react-query/queriesAndMutation";
