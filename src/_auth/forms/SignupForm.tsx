@@ -1,6 +1,8 @@
+import { Link, useNavigate } from "react-router-dom";
+import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
 import { Controller, useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -16,16 +18,28 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { SignupValidation } from "@/lib/validation";
-import { z } from "zod";
 import Loader from "@/components/shared/loader";
-import { Link } from "react-router-dom";
-import { useState } from "react";
-import { createUserAccount } from "@/lib/appwrite/api";
 import { toast } from "@/components/ui/toast";
+import { SignupValidation } from "@/lib/validation";
+import {
+  useCreateUserAccount,
+  useSignInAccount,
+} from "@/lib/react-query/queriesAndMutation";
+import { useUserContext } from "@/context/AuthContext";
 
 const SignupForm = () => {
-  const [isLoading, setLoading] = useState(false);
+  const { mutateAsync: createUserAccount, isPending: isCreatingUser } =
+    useCreateUserAccount();
+
+  const { mutateAsync: signInAccount, isPending: isSigningIn } =
+    useSignInAccount();
+
+  const { checkAuthUser, isLoading: isUserLoading } = useUserContext();
+
+  const navigate = useNavigate();
+
+  const isBusy = isSigningIn || isCreatingUser || isUserLoading;
+
   const form = useForm<z.infer<typeof SignupValidation>>({
     resolver: zodResolver(SignupValidation),
     defaultValues: {
@@ -38,23 +52,39 @@ const SignupForm = () => {
 
   async function onSubmit(values: z.infer<typeof SignupValidation>) {
     try {
-      setLoading(true);
       const newUser = await createUserAccount(values);
-      // const session = await signInAccount();
-      toast.add({
-        type: "success",
-        title: "Account created successfully",
-        description: "Auto redirecting to login, please wait...",
+      if (!newUser) throw new Error("Sign up failed, please try again.");
+
+      const session = await signInAccount({
+        email: values.email,
+        password: values.password,
       });
+
+      if (!session) throw new Error("Sign in failed, please try again.");
+
+      const isLoggedIn = await checkAuthUser();
+
+      if (isLoggedIn) {
+        form.reset();
+        toast.add({
+          type: "success",
+          title: "Account created successfully",
+          description: "Auto redirecting, please wait...",
+        });
+        navigate("/");
+      } else {
+        toast.add({
+          type: "error",
+          title: "Authentication failed",
+        });
+      }
       return newUser;
     } catch (e) {
       return toast.add({
         type: "error",
-        title: "Sign up failed, please try again later.",
+        title: "Something went wrong.",
         description: e instanceof Error ? e.message : String(e),
       });
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -90,6 +120,7 @@ const SignupForm = () => {
                     aria-invalid={fieldState.invalid}
                     placeholder="Your name"
                     autoComplete="off"
+                    disabled={isBusy}
                   />
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -113,6 +144,7 @@ const SignupForm = () => {
                     aria-invalid={fieldState.invalid}
                     placeholder="Your username"
                     autoComplete="off"
+                    disabled={isBusy}
                   />
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -134,6 +166,7 @@ const SignupForm = () => {
                     aria-invalid={fieldState.invalid}
                     placeholder="Your email"
                     autoComplete="off"
+                    disabled={isBusy}
                   />
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -157,6 +190,7 @@ const SignupForm = () => {
                     aria-invalid={fieldState.invalid}
                     placeholder="Your password"
                     autoComplete="off"
+                    disabled={isBusy}
                   />
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -173,18 +207,18 @@ const SignupForm = () => {
             type="button"
             variant="outline"
             onClick={() => form.reset()}
-            className={isLoading ? "cursor-not-allowed" : "cursor-pointer"}
-            disabled={isLoading}
+            className={isBusy ? "cursor-not-allowed" : "cursor-pointer"}
+            disabled={isBusy}
           >
             Reset
           </Button>
           <Button
             type="submit"
-            className={`shad-button_primary ${isLoading ? "cursor-not-allowed" : "cursor-pointer"}`}
+            className={`shad-button_primary ${isBusy ? "cursor-not-allowed" : "cursor-pointer"}`}
             form="signup-form"
-            disabled={isLoading}
+            disabled={isBusy}
           >
-            {isLoading ? (
+            {isBusy ? (
               <div className="flex-center gap-2">
                 <Loader />
               </div>

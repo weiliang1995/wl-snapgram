@@ -1,6 +1,9 @@
+import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Controller, useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router-dom";
+import { AppwriteException } from "appwrite";
 import {
   Card,
   CardContent,
@@ -16,36 +19,69 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { SigninValidation } from "@/lib/validation";
-import { z } from "zod";
 import Loader from "@/components/shared/loader";
-import { Link } from "react-router-dom";
-import { useState } from "react";
+import { toast } from "@/components/ui/toast";
+import { useUserContext } from "@/context/AuthContext";
+import { useSignInAccount } from "@/lib/react-query/queriesAndMutation";
+import { SigninValidation } from "@/lib/validation";
 
-type Props = {};
+const SigninForm = () => {
+  const { mutateAsync: signInAccount, isPending: isSigningIn } =
+    useSignInAccount();
 
-const SigninForm = (props: Props) => {
-  const [isLoading, setLoading] = useState(false);
+  const { checkAuthUser } = useUserContext();
+
+  const navigate = useNavigate();
+
   const form = useForm<z.infer<typeof SigninValidation>>({
     resolver: zodResolver(SigninValidation),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
 
-  async function onSubmit() {
-    // const newUser = await createUserAccount(values);
-    // console.log(newUser, ">>>");
-    // try {
-    //   setLoading(true);
-    //   await new Promise((resolve) => setTimeout(resolve, 1500));
-    //   console.log("submit completed");
-    // } catch (e) {
-    //   console.error(e);
-    // } finally {
-    //   setLoading(false);
-    // }
+  async function onSubmit(values: z.infer<typeof SigninValidation>) {
+    try {
+      await signInAccount({
+        email: values.email,
+        password: values.password,
+      });
+
+      const isLoggedIn = await checkAuthUser();
+
+      if (isLoggedIn) {
+        form.reset();
+        toast.add({
+          type: "success",
+          title: "Sign in successfully",
+          description: "Auto redirecting, please wait...",
+        });
+        navigate("/");
+      } else {
+        toast.add({
+          type: "error",
+          title: "Authentication failed",
+        });
+      }
+    } catch (e) {
+      let title = "Something went wrong.";
+      let description = "Please try again later.";
+      if (e instanceof AppwriteException) {
+        if (e.code === 401) {
+          title = "Sign in failed";
+          description = "Email or password is incorrect";
+        } else if (e.code === 429) {
+          title = "Rate limit exceeded";
+          description = "Too many attempts, please try again later.";
+        }
+      }
+      toast.add({
+        type: "error",
+        title,
+        description,
+      });
+    }
   }
 
   return (
@@ -67,20 +103,18 @@ const SigninForm = (props: Props) => {
         >
           <FieldGroup>
             <Controller
-              name="username"
+              name="email"
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="signin-form-username">
-                    Username
-                  </FieldLabel>
+                  <FieldLabel htmlFor="signin-form-email">Email</FieldLabel>
                   <Input
                     type="text"
                     className="shad-input"
                     {...field}
-                    id="signin-form-username"
+                    id="signin-form-email"
                     aria-invalid={fieldState.invalid}
-                    placeholder="Your username"
+                    placeholder="Your email"
                     autoComplete="off"
                   />
                   {fieldState.invalid && (
@@ -121,18 +155,18 @@ const SigninForm = (props: Props) => {
             type="button"
             variant="outline"
             onClick={() => form.reset()}
-            className={isLoading ? "cursor-not-allowed" : "cursor-pointer"}
-            disabled={isLoading}
+            className={isSigningIn ? "cursor-not-allowed" : "cursor-pointer"}
+            disabled={isSigningIn}
           >
             Reset
           </Button>
           <Button
             type="submit"
-            className={`shad-button_primary ${isLoading ? "cursor-not-allowed" : "cursor-pointer"}`}
+            className={`shad-button_primary ${isSigningIn ? "cursor-not-allowed" : "cursor-pointer"}`}
             form="signin-form"
-            disabled={isLoading}
+            disabled={isSigningIn}
           >
-            {isLoading ? (
+            {isSigningIn ? (
               <div className="flex-center gap-2">
                 <Loader />
               </div>
