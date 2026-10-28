@@ -1,6 +1,6 @@
-import type { INewUser } from "@/types";
-import { account, appwriteConfig, avatars, tablesDB } from "./config";
-import { AppwriteException, ID, Query } from "appwrite";
+import type { INewPost, INewUser } from "@/types";
+import { account, appwriteConfig, avatars, tablesDB, storage } from "./config";
+import { AppwriteException, ID, ImageGravity, Query } from "appwrite";
 
 export async function createUserAccount(user: INewUser) {
   const userId = ID.unique();
@@ -11,7 +11,6 @@ export async function createUserAccount(user: INewUser) {
     name: user.name,
   });
 
-  if (!newAccount) throw new Error();
   const avatarUrl = avatars.getInitials({ name: user.name });
 
   const newUser = await saveUserToDB({
@@ -70,5 +69,90 @@ export async function getCurrentUser() {
 }
 
 export async function signOutAccount() {
-  return account.deleteSession({ sessionId: "current" });
+  try {
+    await account.deleteSession({ sessionId: "current" });
+  } catch (e) {
+    if (e instanceof AppwriteException && e.code === 401) return;
+    throw e;
+  }
+}
+
+export async function createPost(post: INewPost) {
+  let uploadedFile;
+  const file = post.file[0];
+  if (!file) {
+    throw new Error("No file selected");
+  }
+  try {
+    uploadedFile = await uploadFile(file);
+    if (!uploadedFile) throw new Error("File upload failed");
+
+    const fileUrl = getFilePreview(uploadedFile.$id);
+    if (!fileUrl) {
+      throw new Error("File preview generation failed");
+    }
+
+    const tags = [
+      ...new Set(
+        (post.tags ?? "")
+          .split(",")
+          .map((t) => t.trim().toLowerCase())
+          .filter(Boolean),
+      ),
+    ];
+
+    const rowId = ID.unique();
+    const newPost = await tablesDB.createRow({
+      databaseId: appwriteConfig.databaseID,
+      tableId: appwriteConfig.postCollectionId,
+      rowId,
+      data: {
+        creator: post.userId,
+        caption: post.caption,
+        imageUrl: fileUrl,
+        imageId: uploadedFile.$id,
+        location: post.location,
+        tags,
+      },
+    });
+
+    if (!newPost) {
+      throw new Error("Post creation failed");
+    }
+    return newPost;
+  } catch (e) {
+    if (uploadedFile?.$id)
+      await deleteFile(uploadedFile.$id).catch(console.error);
+    throw e;
+  }
+}
+
+export async function uploadFile(file: File) {
+  const fileId = ID.unique();
+  const uploadedFile = await storage.createFile({
+    bucketId: appwriteConfig.storageID,
+    fileId,
+    file: file,
+  });
+  return uploadedFile;
+}
+
+export function getFilePreview(fileId: string) {
+  const fileUrl = storage.getFilePreview({
+    bucketId: appwriteConfig.storageID,
+    fileId,
+    width: 2000,
+    height: 2000,
+    gravity: ImageGravity.Top,
+    quality: 100,
+  });
+  return fileUrl;
+}
+
+export async function deleteFile(fileId: string) {
+  await storage.deleteFile({
+    bucketId: appwriteConfig.storageID,
+    fileId,
+  });
+  return { status: "ok" };
 }

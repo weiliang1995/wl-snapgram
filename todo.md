@@ -92,6 +92,10 @@
 - [ ] 登录参数类型统一用 `ILoginUser`：`api.ts` 的 `signInAccount` 和 `queriesAndMutation.ts` 的 `useSignInAccount` 目前各写了一遍 `{ email; password }`
 - [ ] SigninForm 输入框：邮箱改成 `type="email"` + `autoComplete="email"`，密码加 `autoComplete="current-password"`（SignupForm 用 `new-password`）
 - [ ] `QueryClient` 用的是默认配置：根据需要设置 `staleTime` 和 `retry`（比如 mutation 失败不重试，401 不重试）
+- [ ] **Post 类型整理（做首页 feed 时一起做）**
+  - 现状：`Post` 类型写在 `PostForm.tsx` 里，继承的是 `Models.Document`；`createRow` 没传泛型，`data` 是 `Record<string, any>`，写错列名 TS 不会报错
+  - 处理：挪到 `src/types`，改为继承 `Models.Row`（用的是 `tablesDB`）；`createRow` / `listRows` 传泛型
+  - 注意：`creator` 是关系列，写入时传 user id 字符串，读出来可能是整个 user 对象，读和写的类型可能要分开定义
 
 ## 已知技术缺陷（MVP 阶段接受）
 
@@ -108,7 +112,7 @@
 
 ## 后续功能（types 和 env 已就绪）
 
-- [ ] posts：图片上传到 Storage → 拿到 `fileId` 和预览 URL → 写 posts 表；上传失败时回滚已上传的文件
+- [x] posts：图片上传到 Storage → 拿到 `fileId` 和预览 URL → 写 posts 表
 - [ ] feed：用 `useInfiniteQuery` 加 Appwrite `Query.cursorAfter` 做分页
 - [ ] saves：user ↔ post 关联表，mutation 成功后 `invalidateQueries`
 - [ ] 个人资料更新（`IUpdateUser`）：替换头像时删除旧文件

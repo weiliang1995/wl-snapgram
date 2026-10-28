@@ -26,6 +26,7 @@ import {
   useSignInAccount,
 } from "@/lib/react-query/queriesAndMutation";
 import { useUserContext } from "@/context/AuthContext";
+import { TOAST_TYPE } from "@/constants/toast";
 
 const SignupForm = () => {
   const { mutateAsync: createUserAccount, isPending: isCreatingUser } =
@@ -67,21 +68,21 @@ const SignupForm = () => {
       if (isLoggedIn) {
         form.reset();
         toast.add({
-          type: "success",
+          type: TOAST_TYPE.SUCCESS,
           title: "Account created successfully",
           description: "Auto redirecting, please wait...",
         });
         navigate("/");
       } else {
         toast.add({
-          type: "error",
+          type: TOAST_TYPE.ERROR,
           title: "Authentication failed",
         });
       }
       return newUser;
     } catch (e) {
       return toast.add({
-        type: "error",
+        type: TOAST_TYPE.ERROR,
         title: "Something went wrong.",
         description: e instanceof Error ? e.message : String(e),
       });

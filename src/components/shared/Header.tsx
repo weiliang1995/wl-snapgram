@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useSignOutAccount } from "@/lib/react-query/queriesAndMutation";
 import { useUserContext } from "@/context/AuthContext";
 import { toast } from "@/components/ui/toast";
+import { TOAST_TYPE } from "@/constants/toast";
 
 const Header = () => {
   const { mutate: signOut, isPending: isSigningOut } = useSignOutAccount();
@@ -14,7 +15,7 @@ const Header = () => {
       onSuccess: () => navigate(0),
       onError: (error) =>
         toast.add({
-          type: "error",
+          type: TOAST_TYPE.ERROR,
           title: "Sign out failed",
           description: error.message,
         }),

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useSignOutAccount } from "@/lib/react-query/queriesAndMutation";
 import { toast } from "@/components/ui/toast";
+import { TOAST_TYPE } from "@/constants/toast";
 
 const LeftSidebar = () => {
   const { user } = useUserContext();
@@ -19,7 +20,7 @@ const LeftSidebar = () => {
         toast.add({
           title: "Sign out failed",
           description: error.message,
-          type: "error",
+          type: TOAST_TYPE.ERROR,
         }),
     });
   }
