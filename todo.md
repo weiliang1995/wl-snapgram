@@ -97,6 +97,39 @@
   - 处理：挪到 `src/types`，改为继承 `Models.Row`（用的是 `tablesDB`）；`createRow` / `listRows` 传泛型
   - 注意：`creator` 是关系列，写入时传 user id 字符串，读出来可能是整个 user 对象，读和写的类型可能要分开定义
 
+## P2 · 统一错误处理（功能开发完后再迁移）
+
+- [ ] **mutation 错误统一由 MutationCache 处理**
+  - 现状：query 错误已经由 `QueryProvider` 的 `QueryCache.onError` 统一弹 toast；mutation 还在各表单里自己 try/catch 加 toast（SigninForm、SignupForm、CreatePost 等），逻辑重复
+  - 处理：
+    - `QueryClient` 增加 `mutationCache: new MutationCache({ onError })`，默认弹出通用的错误 toast
+    - 新增 `getErrorMessage(error)`，把常见的 `AppwriteException` 翻译成统一文案（429 请求过于频繁、401 登录已过期、其他用通用文案）
+    - 声明 `meta` 类型（`declare module "@tanstack/react-query"` 的 `Register.mutationMeta`），支持：
+      - `skipGlobalError: true`：调用处自己处理，全局不弹
+      - `errorMessages: { 401: "..." }`：按错误码覆盖文案（比如登录时 401 = 密码错误）
+    - 迁移各表单：删除重复的 catch 和 toast，只保留特殊情况
+  - 注意：全局 `onError` 和单个 mutation 的 `onError` / try-catch **会同时执行**，迁移时要用 `meta` 避免弹两次 toast
+  - 迁移前准备：错误 toast 统一用 `toast.add({ type: TOAST_TYPE.ERROR, ... })` 的写法，方便全局搜索；特殊错误码处理加注释标记
+
+## P3 · UX 优化（MVP 完成后再做）
+
+- [ ] **刷新时点赞和收藏图标从"未点"跳到"已点"**
+  - 原因：AuthContext 恢复用户和 Home 拉取帖子是并行的两个请求。帖子先回来时 `user.id` 还是 `""`，`checkIsLiked(likes, "")` 得出了错误的 `false`；收藏依赖的 `useGetCurrentUser()` 是另一个独立请求，也有同样的问题
+  - 原则：不要让整页等用户数据（网络慢时用户会完全看不到页面），只让依赖用户的那一小块等待
+
+- [ ] **方法 1：用户加载期间图标显示中性状态（先做这个，改动最小）**
+  - 位置：`src/components/shared/PostStats.tsx`
+  - 处理：`isLiked = !isUserLoading && checkIsLiked(likes, userId)`；加载期间图标设成 `opacity-40 pointer-events-none`，加上 `transition-opacity` 让变化更柔和
+  - 收藏图标同样处理，用 `useGetCurrentUser()` 的 `isPending` 判断
+
+- [ ] **方法 2：缓存当前用户，刷新时直接使用（stale-while-revalidate）**
+  - 处理：拿到用户时写入 `localStorage.cachedUser`；AuthProvider 的 `useState` 初始值从缓存读取（读取要包 try/catch）；后台的 `getCurrentUser()` 返回后用最新数据覆盖，session 失效时清掉缓存并跳转登录
+  - 注意：**登出时必须清掉 `cachedUser`**，否则下一个登录的人会先看到上一个人的数据
+  - 当前用户改由 React Query 管理之后（见 P0），改用 `initialData` / `placeholderData` 或 `persistQueryClient` 实现
+
+- [ ] **RootLayout 守卫不要挡住整个页面**
+  - 现状建议：守卫只负责"确认未登录后跳转 `/sign-in`"；用户还在加载时先渲染页面，不要显示全屏 loader
+
 ## 已知技术缺陷（MVP 阶段接受）
 
 当前架构是纯 SPA + Appwrite BaaS，所有业务逻辑都跑在浏览器里。以下缺陷是有意接受的，并记录了改进方案。

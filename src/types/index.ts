@@ -1,3 +1,5 @@
+import type { Models } from "appwrite";
+
 export type IContextType = {
   user: IUser;
   isLoading: boolean;
@@ -59,4 +61,33 @@ export type INewUser = {
 export type ILoginUser = {
   email: string;
   password: string;
+};
+
+export type IPostCard = Models.DefaultRow & {
+  caption?: string;
+  tags?: string[];
+  location?: string;
+  imageId?: string;
+  imageUrl: string;
+  creator: Models.Row & {
+    name: string;
+    username: string;
+    imageUrl: string;
+  };
+  likes?: Pick<Models.Row, "$id">[];
+};
+
+export type ISaveRecord = Models.Row & {
+  post?: Pick<Models.Row, "$id">;
+};
+
+// users 表的 row（getCurrentUser 返回）
+export type IUserRow = Models.Row & {
+  accountId: string;
+  name: string;
+  username: string;
+  email: string;
+  imageUrl: string;
+  bio: string;
+  save?: ISaveRecord[];
 };

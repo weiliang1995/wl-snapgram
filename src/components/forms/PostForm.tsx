@@ -75,7 +75,7 @@ const PostForm = ({ post }: PostFormProps) => {
     );
   }
   return (
-    <Card className="w-full xs:w-120 items-center justify-center-safe bg-card rounded-xl overflow-auto">
+    <Card className="w-full items-center justify-center-safe bg-card rounded-xl overflow-auto">
       <CardContent className="w-full">
         <form
           id="create-post"

@@ -1,6 +1,6 @@
-import type { INewPost, INewUser } from "@/types";
+import type { INewPost, INewUser, IPostCard, IUserRow } from "@/types";
 import { account, appwriteConfig, avatars, tablesDB, storage } from "./config";
-import { AppwriteException, ID, ImageGravity, Query } from "appwrite";
+import { AppwriteException, ID, Query } from "appwrite";
 
 export async function createUserAccount(user: INewUser) {
   const userId = ID.unique();
@@ -41,13 +41,25 @@ export async function saveUserToDB(user: {
 }
 
 export async function signInAccount(user: { email: string; password: string }) {
-  await account.deleteSession({ sessionId: "current" }).catch(() => {});
-
-  const session = await account.createEmailPasswordSession({
-    email: user.email,
-    password: user.password,
-  });
-  return session;
+  try {
+    return await account.createEmailPasswordSession({
+      email: user.email,
+      password: user.password,
+    });
+  } catch (e) {
+    // 只有已存在 session 时才删除再重试，避免未登录时多出一个 401 请求
+    if (
+      e instanceof AppwriteException &&
+      e.type === "user_session_already_exists"
+    ) {
+      await account.deleteSession({ sessionId: "current" });
+      return await account.createEmailPasswordSession({
+        email: user.email,
+        password: user.password,
+      });
+    }
+    throw e;
+  }
 }
 
 export async function getCurrentUser() {
@@ -59,10 +71,13 @@ export async function getCurrentUser() {
     throw e;
   }
 
-  const currentUser = await tablesDB.listRows({
+  const currentUser = await tablesDB.listRows<IUserRow>({
     databaseId: appwriteConfig.databaseID,
     tableId: appwriteConfig.userCollectionId,
-    queries: [Query.equal("accountId", currentAccount.$id)],
+    queries: [
+      Query.equal("accountId", currentAccount.$id),
+      Query.select(["*", "save.$id", "save.post.$id"]),
+    ],
   });
 
   return currentUser.rows[0] ?? null;
@@ -87,7 +102,7 @@ export async function createPost(post: INewPost) {
     uploadedFile = await uploadFile(file);
     if (!uploadedFile) throw new Error("File upload failed");
 
-    const fileUrl = getFilePreview(uploadedFile.$id);
+    const fileUrl = getFileView(uploadedFile.$id);
     if (!fileUrl) {
       throw new Error("File preview generation failed");
     }
@@ -137,14 +152,10 @@ export async function uploadFile(file: File) {
   return uploadedFile;
 }
 
-export function getFilePreview(fileId: string) {
-  const fileUrl = storage.getFilePreview({
+export function getFileView(fileId: string) {
+  const fileUrl = storage.getFileView({
     bucketId: appwriteConfig.storageID,
     fileId,
-    width: 2000,
-    height: 2000,
-    gravity: ImageGravity.Top,
-    quality: 100,
   });
   return fileUrl;
 }
@@ -155,4 +166,59 @@ export async function deleteFile(fileId: string) {
     fileId,
   });
   return { status: "ok" };
+}
+
+export async function getRecentPosts() {
+  const posts = await tablesDB.listRows<IPostCard>({
+    databaseId: appwriteConfig.databaseID,
+    tableId: appwriteConfig.postCollectionId,
+    queries: [
+      Query.select(["*", "creator.*", "likes.$id"]),
+      Query.orderDesc("$createdAt"),
+      Query.limit(20),
+    ],
+  });
+
+  if (!posts) {
+    throw new Error("Query failed");
+  }
+  return posts;
+}
+
+export async function likePost(postId: string, likesArray: string[]) {
+  const updatedPost = await tablesDB.updateRow({
+    databaseId: appwriteConfig.databaseID,
+    tableId: appwriteConfig.postCollectionId,
+    rowId: postId,
+    data: {
+      likes: likesArray,
+    },
+  });
+
+  return updatedPost;
+}
+
+export async function savePost(postId: string, userId: string) {
+  const rowId = ID.unique();
+  const savedPost = await tablesDB.createRow({
+    databaseId: appwriteConfig.databaseID,
+    tableId: appwriteConfig.saveCollectionId,
+    rowId,
+    data: {
+      user: userId,
+      post: postId,
+    },
+  });
+
+  return savedPost;
+}
+
+export async function deleteSavedPost(savedRecordId: string) {
+  const statusCode = await tablesDB.deleteRow({
+    databaseId: appwriteConfig.databaseID,
+    tableId: appwriteConfig.saveCollectionId,
+    rowId: savedRecordId,
+  });
+
+  return statusCode;
 }
