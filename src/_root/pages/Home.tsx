@@ -1,9 +1,45 @@
-import React from "react";
+import EmptyUI from "@/components/shared/EmptyUI";
+import Loader from "@/components/shared/Loader";
+import PostCard from "@/components/shared/PostCard";
+import { useGetRecentPosts } from "@/lib/react-query/queriesAndMutation";
 
-type Props = {};
+const Home = () => {
+  const {
+    data: posts,
+    isPending: isPostLoading,
+    isError: isErrorPosts,
+  } = useGetRecentPosts();
 
-const Home = (props: Props) => {
-  return <div>Home</div>;
+  const renderContent = () => {
+    if (isPostLoading) return <Loader />;
+
+    if (isErrorPosts) {
+      return <EmptyUI type="error" />;
+    }
+
+    if (!posts.rows.length) {
+      return <EmptyUI type="empty" />;
+    }
+
+    return (
+      <ul className="flex flex-col flex-1 gap-9 w-full">
+        {posts.rows.map((post) => (
+          <PostCard post={post} key={post.$id} />
+        ))}
+      </ul>
+    );
+  };
+
+  return (
+    <div className="flex flex-1">
+      <div className="home-container">
+        <div className="home-posts">
+          <h2 className="h3-bold md:h2-bold text-left w-full">Home Feed</h2>
+          {renderContent()}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default Home;

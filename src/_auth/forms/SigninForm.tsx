@@ -19,11 +19,12 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import Loader from "@/components/shared/loader";
+import Loader from "@/components/shared/Loader";
 import { toast } from "@/components/ui/toast";
 import { useUserContext } from "@/context/AuthContext";
 import { useSignInAccount } from "@/lib/react-query/queriesAndMutation";
 import { SigninValidation } from "@/lib/validation";
+import { TOAST_TYPE } from "@/constants/toast";
 
 const SigninForm = () => {
   const { mutateAsync: signInAccount, isPending: isSigningIn } =
@@ -53,14 +54,14 @@ const SigninForm = () => {
       if (isLoggedIn) {
         form.reset();
         toast.add({
-          type: "success",
+          type: TOAST_TYPE.SUCCESS,
           title: "Sign in successfully",
           description: "Auto redirecting, please wait...",
         });
         navigate("/");
       } else {
         toast.add({
-          type: "error",
+          type: TOAST_TYPE.ERROR,
           title: "Authentication failed",
         });
       }
@@ -77,7 +78,7 @@ const SigninForm = () => {
         }
       }
       toast.add({
-        type: "error",
+        type: TOAST_TYPE.ERROR,
         title,
         description,
       });
