@@ -1,8 +1,4 @@
-import React from "react";
-
-type Props = {};
-
-const Saved = (props: Props) => {
+const Saved = () => {
   return <div>Saved</div>;
 };
 

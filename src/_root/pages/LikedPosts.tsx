@@ -1,8 +1,4 @@
-import React from "react";
-
-type Props = {};
-
-const LikedPosts = (props: Props) => {
+const LikedPosts = () => {
   return <div>LikedPosts</div>;
 };
 

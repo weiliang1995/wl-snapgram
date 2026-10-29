@@ -1,9 +1,6 @@
-import React from "react";
 import { Outlet, Navigate } from "react-router-dom";
 
-type Props = {};
-
-const AuthLayout = (props: Props) => {
+const AuthLayout = () => {
   const isAuth = false;
 
   return (

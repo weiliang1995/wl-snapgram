@@ -1,7 +1,7 @@
 import { INITIAL_STATE, INITIAL_USER } from "@/constants/auth";
 import { getCurrentUser } from "@/lib/appwrite/api";
 import type { IContextType, IUser } from "@/types";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext<IContextType>(INITIAL_STATE);

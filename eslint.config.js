@@ -28,6 +28,7 @@ export default defineConfig([
         rootDir: 'src',
         prefix: '@',
       }],
+      "react-refresh/only-export-components": "warn",
     },
   },
 ])
