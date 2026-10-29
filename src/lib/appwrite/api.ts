@@ -270,3 +270,38 @@ export async function deletePost(postId: string, imageId: string) {
   });
   await deleteFile(imageId).catch(console.error);
 }
+
+export async function getInfinitePosts({
+  pageParam,
+}: {
+  pageParam: string | null;
+}) {
+  const queries = [
+    Query.select(["*", "creator.*", "likes.$id"]),
+    Query.orderDesc("$createdAt"),
+    Query.limit(10),
+  ];
+  if (pageParam) {
+    queries.push(Query.cursorAfter(pageParam));
+  }
+
+  return tablesDB.listRows<IPost>({
+    databaseId: appwriteConfig.databaseID,
+    tableId: appwriteConfig.postCollectionId,
+    queries,
+  });
+}
+
+export async function searchPosts(searchTerm: string) {
+  const post = await tablesDB.listRows<IPost>({
+    databaseId: appwriteConfig.databaseID,
+    tableId: appwriteConfig.postCollectionId,
+    queries: [
+      Query.search("caption", searchTerm),
+      Query.select(["*", "creator.*", "likes.$id"]),
+    ],
+  });
+
+  if (!post) throw new Error("No post");
+  return post;
+}

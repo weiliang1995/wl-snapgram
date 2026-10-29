@@ -2,7 +2,7 @@ import {
   useQuery,
   useMutation,
   useQueryClient,
-  // useInfiniteQuery,
+  useInfiniteQuery,
 } from "@tanstack/react-query";
 import {
   createPost,
@@ -10,10 +10,12 @@ import {
   deletePost,
   deleteSavedPost,
   getCurrentUser,
+  getInfinitePosts,
   getPostById,
   getRecentPosts,
   likePost,
   savePost,
+  searchPosts,
   signInAccount,
   signOutAccount,
   updatePost,
@@ -168,3 +170,19 @@ export const useDeletePost = () => {
     },
   });
 };
+
+export const useGetPosts = () =>
+  useInfiniteQuery({
+    queryKey: [QUERY_KEYS.GET_POSTS],
+    queryFn: getInfinitePosts,
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) =>
+      lastPage.rows.length < 10 ? null : (lastPage.rows.at(-1)?.$id ?? null),
+  });
+
+export const useSearchPosts = (searchTerm: string) =>
+  useQuery({
+    queryKey: [QUERY_KEYS.SEARCH_POSTS, searchTerm],
+    queryFn: () => searchPosts(searchTerm),
+    enabled: !!searchTerm,
+  });

@@ -111,6 +111,15 @@
   - 注意：全局 `onError` 和单个 mutation 的 `onError` / try-catch **会同时执行**，迁移时要用 `meta` 避免弹两次 toast
   - 迁移前准备：错误 toast 统一用 `toast.add({ type: TOAST_TYPE.ERROR, ... })` 的写法，方便全局搜索；特殊错误码处理加注释标记
 
+## P1 · Explore 页待处理问题
+
+- [ ] **Explore 点赞后图标状态闪烁**
+  - 现象：在 Explore 页点赞，like 状态会依次变成 false → true → false → true，一共变化四次；取消点赞也一样
+  - 对比：收藏没有这个问题
+
+- [ ] **GridPostList 里的 PostStats 需要改造**
+  - 需求：在 grid 里只显示 like，或者 like + save，其他内容（评论、分享、时间等）不显示
+
 ## P3 · UX 优化（MVP 完成后再做）
 
 - [ ] **刷新时点赞和收藏图标从"未点"跳到"已点"**
