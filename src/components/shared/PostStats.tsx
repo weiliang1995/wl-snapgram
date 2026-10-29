@@ -9,7 +9,7 @@ import { checkIsLiked, formatPostTime } from "@/lib/utils";
 import type { IPost } from "@/types";
 
 type PostStatsProps = {
-  post: IPost;
+  post?: IPost;
   userId: string;
 };
 const PostStats = ({ post, userId }: PostStatsProps) => {
@@ -42,7 +42,7 @@ const PostStats = ({ post, userId }: PostStatsProps) => {
     const newLikes = likes.includes(userId)
       ? likes.filter((id) => id !== userId)
       : [...likes, userId];
-    likePost({ postId: post.$id, likesArray: newLikes });
+    likePost({ postId: post?.$id ?? "", likesArray: newLikes });
   };
 
   const handleSavePost = (e: React.MouseEvent) => {
@@ -52,7 +52,7 @@ const PostStats = ({ post, userId }: PostStatsProps) => {
     if (savedPostRecord) {
       deleteSavePost(savedPostRecord.$id);
     } else {
-      savePost({ postId: post.$id, userId });
+      savePost({ postId: post?.$id ?? "", userId });
     }
   };
 
