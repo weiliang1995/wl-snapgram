@@ -1,6 +1,7 @@
-import type { INewPost, INewUser, IPostCard, IUserRow } from "@/types";
+import type { INewPost, INewUser, IPost, IUpdatePost, IUserRow } from "@/types";
 import { account, appwriteConfig, avatars, tablesDB, storage } from "./config";
 import { AppwriteException, ID, Query } from "appwrite";
+import { parseTags } from "@/lib/appwrite/utils";
 
 export async function createUserAccount(user: INewUser) {
   const userId = ID.unique();
@@ -107,15 +108,6 @@ export async function createPost(post: INewPost) {
       throw new Error("File preview generation failed");
     }
 
-    const tags = [
-      ...new Set(
-        (post.tags ?? "")
-          .split(",")
-          .map((t) => t.trim().toLowerCase())
-          .filter(Boolean),
-      ),
-    ];
-
     const rowId = ID.unique();
     const newPost = await tablesDB.createRow({
       databaseId: appwriteConfig.databaseID,
@@ -127,7 +119,7 @@ export async function createPost(post: INewPost) {
         imageUrl: fileUrl,
         imageId: uploadedFile.$id,
         location: post.location,
-        tags,
+        tags: parseTags(post.tags),
       },
     });
 
@@ -169,7 +161,7 @@ export async function deleteFile(fileId: string) {
 }
 
 export async function getRecentPosts() {
-  const posts = await tablesDB.listRows<IPostCard>({
+  const posts = await tablesDB.listRows<IPost>({
     databaseId: appwriteConfig.databaseID,
     tableId: appwriteConfig.postCollectionId,
     queries: [
@@ -221,4 +213,60 @@ export async function deleteSavedPost(savedRecordId: string) {
   });
 
   return statusCode;
+}
+
+export async function getPostById(postId: string) {
+  const post = await tablesDB.getRow<IPost>({
+    databaseId: appwriteConfig.databaseID,
+    tableId: appwriteConfig.postCollectionId,
+    rowId: postId,
+    queries: [Query.select(["*", "creator.*", "likes.$id"])],
+  });
+  return post;
+}
+
+export async function updatePost(post: IUpdatePost) {
+  const newFile = post.file[0];
+  let updatedPost;
+  let uploadedFile;
+
+  try {
+    let image = { imageId: post.imageId, imageUrl: post.imageUrl };
+
+    if (newFile) {
+      uploadedFile = await uploadFile(newFile);
+      image = {
+        imageId: uploadedFile.$id,
+        imageUrl: getFileView(uploadedFile.$id),
+      };
+    }
+
+    updatedPost = await tablesDB.updateRow({
+      databaseId: appwriteConfig.databaseID,
+      tableId: appwriteConfig.postCollectionId,
+      rowId: post.postId,
+      data: {
+        caption: post.caption,
+        imageId: image.imageId,
+        imageUrl: image.imageUrl,
+        location: post.location,
+        tags: parseTags(post.tags),
+      },
+    });
+  } catch (e) {
+    if (uploadedFile) await deleteFile(uploadedFile.$id).catch(console.error);
+    throw e;
+  }
+  if (uploadedFile) await deleteFile(post.imageId).catch(console.error);
+  return updatedPost;
+}
+
+export async function deletePost(postId: string, imageId: string) {
+  if (!postId || !imageId) throw new Error();
+  await tablesDB.deleteRow({
+    databaseId: appwriteConfig.databaseID,
+    tableId: appwriteConfig.postCollectionId,
+    rowId: postId,
+  });
+  return { status: "ok" };
 }

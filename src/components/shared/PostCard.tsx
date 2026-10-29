@@ -1,10 +1,10 @@
 import { Card } from "@/components/ui/card";
-import type { IPostCard } from "@/types";
+import type { IPost } from "@/types";
 import { Link } from "react-router-dom";
 import { useUserContext } from "@/context/AuthContext";
 import PostStats from "@/components/shared/PostStats";
 
-const PostCard = ({ post }: { post: IPostCard }) => {
+const PostCard = ({ post }: { post: IPost }) => {
   const { user } = useUserContext();
 
   return (

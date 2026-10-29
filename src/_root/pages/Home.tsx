@@ -1,61 +1,24 @@
+import EmptyUI from "@/components/shared/EmptyUI";
 import Loader from "@/components/shared/Loader";
 import PostCard from "@/components/shared/PostCard";
-import { Button } from "@/components/ui/button";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
 import { useGetRecentPosts } from "@/lib/react-query/queriesAndMutation";
-import { ImageOffIcon, TriangleAlertIcon } from "lucide-react";
 
 const Home = () => {
   const {
     data: posts,
     isPending: isPostLoading,
     isError: isErrorPosts,
-    isRefetching,
-    refetch,
   } = useGetRecentPosts();
 
   const renderContent = () => {
     if (isPostLoading) return <Loader />;
 
-    // 错误提示由 QueryProvider 统一弹 toast，这里只负责页面上的错误状态
     if (isErrorPosts) {
-      return (
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <TriangleAlertIcon />
-            </EmptyMedia>
-            <EmptyTitle>Failed to load posts</EmptyTitle>
-            <EmptyDescription>Please check your connection.</EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
-            <Button onClick={() => refetch()} disabled={isRefetching}>
-              {isRefetching ? "Retrying..." : "Retry"}
-            </Button>
-          </EmptyContent>
-        </Empty>
-      );
+      return <EmptyUI type="error" />;
     }
 
     if (!posts.rows.length) {
-      return (
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <ImageOffIcon />
-            </EmptyMedia>
-            <EmptyTitle>No posts yet</EmptyTitle>
-            <EmptyDescription>Be the first to share something!</EmptyDescription>
-          </EmptyHeader>
-        </Empty>
-      );
+      return <EmptyUI type="empty" />;
     }
 
     return (

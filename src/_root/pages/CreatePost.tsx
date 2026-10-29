@@ -1,4 +1,5 @@
 import PostForm from "@/components/forms/PostForm";
+import { FormAction } from "@/constants/post-form";
 
 const CreatePost = () => {
   return (
@@ -13,7 +14,7 @@ const CreatePost = () => {
           />
           <h2 className="h3-bold md:h2-bold w-full text-left">Create Post</h2>
         </div>
-        <PostForm />
+        <PostForm action={FormAction.CREATE} />
       </div>
     </div>
   );

@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Controller, useForm } from "react-hook-form";
@@ -11,36 +10,38 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import Loader from "@/components/shared/Loader";
-import { createPostValidation } from "@/lib/validation";
+import { postValidation, type PostFormValues } from "@/lib/validation";
 import { Textarea } from "@/components/ui/textarea";
 import FileUploader from "@/components/shared/FileUploader";
-import type { Models } from "appwrite";
-import { useCreatePost } from "@/lib/react-query/queriesAndMutation";
+import type { IPost } from "@/types";
+import {
+  useCreatePost,
+  useUpdatePostById,
+} from "@/lib/react-query/queriesAndMutation";
 import { useUserContext } from "@/context/AuthContext";
 import { toast } from "@/components/ui/toast";
 import { useNavigate } from "react-router-dom";
 import { TOAST_TYPE } from "@/constants/toast";
+import { FormAction } from "@/constants/post-form";
 
-type Post = Models.Document & {
-  caption?: string;
-  location?: string;
-  tags?: string[];
-  imageUrl: string;
-  imageId: string;
-};
 type PostFormProps = {
-  post?: Post;
+  post?: IPost;
+  action: FormAction;
 };
 
-const PostForm = ({ post }: PostFormProps) => {
+const PostForm = ({ post, action }: PostFormProps) => {
   const { mutate: createPost, isPending: isCreatingPost } = useCreatePost();
+
+  const { mutate: updatePost, isPending: isUpdatingPost } = useUpdatePostById();
 
   const { user } = useUserContext();
 
   const navigate = useNavigate();
 
-  const form = useForm<z.infer<typeof createPostValidation>>({
-    resolver: zodResolver(createPostValidation),
+  const isLoading = isCreatingPost || isUpdatingPost;
+
+  const form = useForm<PostFormValues>({
+    resolver: zodResolver(postValidation(action)),
     defaultValues: {
       caption: post?.caption ?? "",
       file: [],
@@ -49,7 +50,37 @@ const PostForm = ({ post }: PostFormProps) => {
     },
   });
 
-  function onSubmit(values: z.infer<typeof createPostValidation>) {
+  function onSubmit(values: PostFormValues) {
+    if (action === FormAction.UPDATE) {
+      if (!post) return;
+      updatePost(
+        {
+          ...values,
+          postId: post.$id,
+          imageId: post?.imageId,
+          imageUrl: post?.imageUrl,
+        },
+        {
+          onSuccess: () => {
+            toast.add({
+              type: TOAST_TYPE.SUCCESS,
+              title: "Edit post successfully",
+              description: "Redirecting to post...",
+            });
+            navigate(`/posts/${post.$id}`);
+          },
+          onError: (error) => {
+            toast.add({
+              type: TOAST_TYPE.ERROR,
+              title: "Something went wrong",
+              description: error.message,
+            });
+          },
+        },
+      );
+      return;
+    }
+
     createPost(
       {
         ...values,
@@ -193,24 +224,30 @@ const PostForm = ({ post }: PostFormProps) => {
           <Button
             type="button"
             variant="outline"
-            className={`shad-button_dark_4 border-none ${isCreatingPost ? "cursor-not-allowed" : "cursor-pointer"}`}
-            onClick={() => form.reset()}
-            disabled={isCreatingPost}
+            className={`shad-button_dark_4 border-none ${isLoading ? "cursor-not-allowed" : "cursor-pointer"}`}
+            onClick={
+              action === FormAction.CREATE
+                ? () => form.reset()
+                : () => history.back()
+            }
+            disabled={isLoading}
           >
             Cancel
           </Button>
           <Button
             type="submit"
-            className={`shad-button_primary whitespace-nowrap px-4 py-5 ${isCreatingPost ? "cursor-not-allowed" : "cursor-pointer"}`}
+            className={`shad-button_primary whitespace-nowrap px-4 py-5 ${isLoading ? "cursor-not-allowed" : "cursor-pointer"}`}
             form="create-post"
-            disabled={isCreatingPost}
+            disabled={isLoading}
           >
-            {isCreatingPost ? (
+            {isLoading ? (
               <div className="flex-center gap-2">
                 <Loader />
               </div>
-            ) : (
+            ) : action === FormAction.CREATE ? (
               "Create Post"
+            ) : (
+              "Edit Post"
             )}
           </Button>
         </Field>

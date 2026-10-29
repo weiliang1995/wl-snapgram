@@ -6,10 +6,10 @@ import {
   useSavePost,
 } from "@/lib/react-query/queriesAndMutation";
 import { checkIsLiked, formatPostTime } from "@/lib/utils";
-import type { IPostCard } from "@/types";
+import type { IPost } from "@/types";
 
 type PostStatsProps = {
-  post: IPostCard;
+  post: IPost;
   userId: string;
 };
 const PostStats = ({ post, userId }: PostStatsProps) => {
