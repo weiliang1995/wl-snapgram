@@ -9,7 +9,7 @@ import { checkIsLiked, formatPostTime } from "@/lib/utils";
 import type { IPost } from "@/types";
 
 type PostStatsProps = {
-  post?: IPost;
+  post: IPost;
   userId: string;
 };
 const PostStats = ({ post, userId }: PostStatsProps) => {

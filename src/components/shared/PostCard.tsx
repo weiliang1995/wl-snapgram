@@ -29,12 +29,14 @@ const PostCard = ({ post }: { post: IPost }) => {
               >
                 {post?.creator.name}
               </Link>
-              <span className="flex-center gap-0.5">
-                <img src="/assets/icons/location.svg" />
-                <p className="subtle-semibold lg:small-regular text-light-3">
-                  {post?.location}
-                </p>
-              </span>
+              {post.location && (
+                <span className="flex-center gap-0.5">
+                  <img src="/assets/icons/location.svg" />
+                  <p className="subtle-semibold lg:small-regular text-light-3">
+                    {post?.location}
+                  </p>
+                </span>
+              )}
             </div>
           </div>
           {user.id === post.creator.$id && (
@@ -54,9 +56,11 @@ const PostCard = ({ post }: { post: IPost }) => {
           </Link>
           <p className="small-regular">{post.caption}</p>
         </span>
-        <p className="flex-start gap-1 mt-2 small-regular text-light-4">
-          #{post.tags?.join(" #")}
-        </p>
+        {!!post.tags?.length && (
+          <p className="flex-start gap-1 mt-2 small-regular text-light-4">
+            #{post.tags?.join(" #")}
+          </p>
+        )}
       </Card>
     </Link>
   );
